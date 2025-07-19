@@ -4,33 +4,34 @@ using AxGrid.Model;
 
 namespace LootBox
 {
-    [State("Spin")]
+    [State(Names.FsmStates.SPIN)]
     public class Spin : FSMState
     {
-        public string STOP_BUTTON_NAME = "Stop";
+        public const float STOP_BUTTON_INTERACTABLE_DELAY = 3f;
+        public const string STOP_BUTTON_NAME = "Stop";
 
         [Enter]
         public void Enter()
         {
-            Settings.Model.EventManager.Invoke("OnSpinStarted");
+            Settings.Model.EventManager.Invoke(Names.Events.ON_SPIN_STARTED);
         }
 
         [Exit]
         public void Exit()
         {
-            Model.Set("IsReadyToStop", false);
+            Model.Set(Names.ModelFields.IS_READY_TO_STOP, false);
         }
 
-        [One(3f)]
+        [One(STOP_BUTTON_INTERACTABLE_DELAY)]
         public void MakeAvailableToStop()
         {
-            Model.Set("IsReadyToStop", true);
+            Model.Set(Names.ModelFields.IS_READY_TO_STOP, true);
         }
 
-        [Bind("OnBtn")]
+        [Bind(Names.Events.ON_BUTTON_CLICKED)]
         public void OnStopClick(string buttonName)
         {
-            if (buttonName == STOP_BUTTON_NAME) Parent.Change("Stop");
+            if (buttonName == STOP_BUTTON_NAME) Parent.Change(Names.FsmStates.STOP);
         }
     }
 }

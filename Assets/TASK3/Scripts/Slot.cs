@@ -13,6 +13,12 @@ namespace LootBox
         public SlotPicture PictureName { get; private set; }
 
         [SerializeField]
+        private Image _blurredPicture;
+
+        [SerializeField]
+        private Image _clearPicture;
+
+        [SerializeField]
         private Image _frame;
 
         private Reel _reel;
@@ -20,20 +26,29 @@ namespace LootBox
         [OnAwake]
         private void SlotAwake()
         {
+            _blurredPicture.gameObject.SetActive(false);
+            _clearPicture.gameObject.SetActive(true);
             _frame.gameObject.SetActive(false);
             _reel = GetComponentInParent<Reel>();
         }
 
-        [Bind("OnSpinStarted")]
+        [Bind(Names.Events.ON_BLUR_PICTURE)]
+        private void OnBlurPicture(bool isBlurred)
+        {
+            _blurredPicture.gameObject.SetActive(isBlurred);
+            _clearPicture.gameObject.SetActive(!isBlurred);
+        }
+
+        [Bind(Names.Events.ON_SPIN_STARTED)]
         private void OnReelSpinStarted()
         {
             _frame.gameObject.SetActive(false);
         }
 
-        [Bind("OnSpinStopped")]
+        [Bind(Names.Events.ON_SPIN_STOPPED)]
         private void OnReelSpinStopped()
         {
-            Dictionary<Reel, SlotPicture> winners = Settings.Model.Get<Dictionary<Reel, SlotPicture>>("Winners");
+            Dictionary<Reel, SlotPicture> winners = Settings.Model.Get<Dictionary<Reel, SlotPicture>>(Names.ModelFields.WINNERS);
             SlotPicture slotPicture;
             if (winners.TryGetValue(_reel, out slotPicture))
             {

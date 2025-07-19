@@ -19,7 +19,7 @@ namespace LootBox
         [OnStart]
         private void StartFsm()
         {
-            Settings.Fsm.Start("Idle");
+            Settings.Fsm.Start(Names.FsmStates.IDLE);
         }
 
         [OnUpdate]

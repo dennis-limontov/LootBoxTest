@@ -19,8 +19,14 @@ namespace LootBox
         private float _speedSlowing = 25f;
 
         [SerializeField]
-        private float _timeDeviation = 0.25f;
+        private float _timeOfDeviation = 0.25f;
 
+        [SerializeField]
+        private float _timeOfAcceleration = 0.5f;
+
+        [SerializeField]
+        private float _timeOfDeceleration = 3f;
+        
         [SerializeField]
         private RectTransform _centerPoint;
 
@@ -53,24 +59,26 @@ namespace LootBox
             }
         }
 
-        [Bind("OnSpinStarted")]
+        [Bind(Names.Events.ON_SPIN_STARTED)]
         private void SpinStart()
         {
             Path = CPath.Create();
-            Path.EasingCircEaseIn(_timeDeviation, 0f, -_speedMax / _speedSlowing, SetCurrentSpeed);
-            Path.EasingCircEaseIn(_timeDeviation, -_speedMax / _speedSlowing, 0f, SetCurrentSpeed);
+            Path.EasingCircEaseIn(_timeOfDeviation, 0f, -_speedMax / _speedSlowing, SetCurrentSpeed);
+            Path.EasingCircEaseIn(_timeOfDeviation, -_speedMax / _speedSlowing, 0f, SetCurrentSpeed);
             _speedMaxRandomized = _speedMax + UnityEngine.Random.Range(-_speedVariance, _speedVariance); 
-            Path.EasingCubicEaseIn(0.5f, 0f, _speedMaxRandomized, SetCurrentSpeed);
+            Path.EasingCubicEaseIn(_timeOfAcceleration, 0f, _speedMaxRandomized, SetCurrentSpeed);
+            Path.Action(() => Settings.Model.Set(Names.ModelFields.BLUR_PUCTURE, true));
         }
 
-        [Bind("OnSpinStopping")]
+        [Bind(Names.Events.ON_SPIN_STOPPING)]
         private void SpinStopping()
         {
             Path = CPath.Create();
-            Path.EasingQuadEaseInOut(3f, _speedMaxRandomized, _speedMax / _speedSlowing, SetCurrentSpeed)
+            Path.EasingQuadEaseInOut(_timeOfDeceleration, _speedMaxRandomized, _speedMax / _speedSlowing, SetCurrentSpeed)
                 .Action(() =>
                 {
                     Path = CPath.Create();
+                    Settings.Model.Set(Names.ModelFields.BLUR_PUCTURE, false);
                     float minDistance = float.MaxValue;
                     int minDistanceIndex = 0;
                     for (int i = 0; i < _reelSlots.Length; i++)
@@ -82,19 +90,18 @@ namespace LootBox
                             minDistanceIndex = i;
                         }
                     }
-                    Debug.Log($"Closest for center: index = {minDistanceIndex}; distance = {minDistance}");
+                    //Debug.Log($"Closest for center: index = {minDistanceIndex}; distance = {minDistance}");
                     Path.Wait(minDistance / (_speedMax / _speedSlowing));
-                    Path.EasingCircEaseIn(_timeDeviation * 2f, _speedMax / _speedSlowing, 0f, SetCurrentSpeed);
-                    Path.EasingCircEaseIn(_timeDeviation, 0f, -_speedMax / _speedSlowing, SetCurrentSpeed);
-                    Path.EasingCircEaseIn(_timeDeviation, -_speedMax / _speedSlowing, 0f, SetCurrentSpeed);
-                    //Path.EasingLinear(minDistance / (_speedMax / (_speedSlowing * 2f)), _speedMax / _speedSlowing, 0f, SetCurrentSpeed);
+                    Path.EasingCircEaseIn(_timeOfDeviation * 2f, _speedMax / _speedSlowing, 0f, SetCurrentSpeed);
+                    Path.EasingCircEaseIn(_timeOfDeviation, 0f, -_speedMax / _speedSlowing, SetCurrentSpeed);
+                    Path.EasingCircEaseIn(_timeOfDeviation, -_speedMax / _speedSlowing, 0f, SetCurrentSpeed);
                     Path.Action(() =>
                     {
                         Dictionary<Reel, SlotPicture> _winners;
-                        _winners = Settings.Model.Get("Winners", new Dictionary<Reel, SlotPicture>());
+                        _winners = Settings.Model.Get(Names.ModelFields.WINNERS, new Dictionary<Reel, SlotPicture>());
                         _winners[this] = _reelSlots[minDistanceIndex].PictureName;
-                        Settings.Model.Set("Winners", _winners);
-                        Settings.Model.EventManager.Invoke("OnReelStopped");
+                        Settings.Model.Set(Names.ModelFields.WINNERS, _winners);
+                        Settings.Model.EventManager.Invoke(Names.Events.ON_REEL_STOPPED);
                     });
                 });
         }
@@ -104,7 +111,7 @@ namespace LootBox
             _speedCurrent = speed;
         }
 
-        [Bind("Test")]
+        [Bind(Names.Events.TEST)]
         public void DoSmth()
         {
             Debug.Log("Lesha Shuboff iz da best");
