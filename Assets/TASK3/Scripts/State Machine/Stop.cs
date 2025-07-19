@@ -16,6 +16,7 @@ namespace LootBox
         [Exit]
         public void Exit()
         {
+            Settings.Model.EventManager.Invoke("OnSpinStopped");
         }
 
         [Bind("OnSpinStopped")]

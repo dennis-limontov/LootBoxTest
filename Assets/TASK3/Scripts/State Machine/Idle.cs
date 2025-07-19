@@ -1,5 +1,6 @@
 using AxGrid.FSM;
 using AxGrid.Model;
+using System.Collections.Generic;
 
 namespace LootBox
 {
@@ -20,6 +21,7 @@ namespace LootBox
         public void Exit()
         {
             Model.Set("IsReadyToStart", false);
+            Model.Set("Winners", new Dictionary<Reel, SlotPicture>());
         }
 
         [Bind("OnBtn")]
